@@ -3,6 +3,17 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+//Middleware to check for a value API Key
+const authorize = (req,res,next)=>{
+    const apikey = req.header("x-api-key");
+    const validKey = process.env.API_KEY;
+
+    if (!apikey || apikey !== validKey) {
+        return res.status(401).json({error:"Unauthorized: Invalidor missing API key."});
+    }
+    next();
+};
+
 function getISOWeekData(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7; // Monday = 1, Sunday = 7
@@ -12,7 +23,7 @@ function getISOWeekData(date) {
     return { year: d.getUTCFullYear(), week: weekNo };
 }
 
-app.get('/', (req, res) => {
+app.get('/',authorize, (req, res) => {
     const startStr = process.env.START_DATE;
     if (!startStr) return res.status(500).send("START_DATE not configured.");
 
